@@ -1,0 +1,67 @@
+Reference github:
+https://github.com/lgozasht/TE-compartmentalization
+
+Genomes:
+Hydra 105: https://research.nhgri.nih.gov/hydra/jbrowse/jbrowse.cgi (GO file in functional annotation tab)
+Hydra AEP: https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_038396675.1/  (GO file in FTP tab)
+Hydractinia: https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_029227915.1/ (GO file in FTP tab)
+
+Steps:
+- open your conda environment
+- module load miniconda/3.13
+- conda activate env_name
+- make a separate folder for each genome you're working with and go through this whole pipeline for one genome at a time
+- download TE compartmentalization script from github into the folder you will be working with. Do everything in this folder
+ - module load git/2.52.0
+ - git clone https://github.com/lgozasht/TE-compartmentalization.git
+ - delete "fi" on line 66 of TE-compartmentalization_pipeline.sh
+ - nano TE-compartmentalization_pipeline.sh  then delete "fi" on line 66
+ - cmmd+O, then cmmd+X to close
+- download go-basic.obo file from this website: https://geneontology.org/docs/download-ontology/#go_basic
+ - wget https://purl.obolibrary.org/obo/go/go-basic.obo
+- copy repeatmasker library from another folder on the cluster to your folder
+ - cp /software/apps/repeatmasker/gnu-4.1.5/Libraries/RepeatPeps.lib  RepeatPeps.lib
+ - cp medusozoa_rep_lib to your folder and rename hydra_AEP-families.fa or hydra_105-families.fa (I have this file, need to give it to you)
+ - mv medusozoa_rep_lib  hydra_AEP-families.fa
+- Download genome data from genome links above and rename (look at paper github for more info):
+- For AEP and Hydractinia:
+ - module load ncbi/16.36.0
+- click datasets and into command line
+ - unzip dataset
+- For Hydra 105:
+- copy link addresses from Genome tab (hydra 2.0 genome assembly), Assembled transcripts (Juliano trinity transcripts), Protein models tab (hydra 2.0 protein model), and Gene models tab (hydra 2.0 gene models - this is the genomic.gff file for 105) rename files in format needed from paper's github (rna.fna -> transcripts.fa, protein.faa -> proteins.fa, GCF....hydra_aep.fna -> genome.fasta)
+should have three files: genome.fa, transcripts.fa, proteins.fa
+- convert genomic.gff or genomic.gff3 file to bed file with 6 columns and name it geneFile_final.tsv
+- For AEP and Hydractinia
+ - awk 'BEGIN{OFS="\t"} $3=="gene" {
+  match($9, /ID=([^;]+)/, arr)
+    print $1, $4-1, $5, arr[1], ".", "."
+}' genomic.gff > geneFile_final.tsv
+- For 105 (might have to rename genomic.gff in the script to what your .gff3 file is called):
+ - awk 'BEGIN{OFS="\t"} /^#/{next} $3=="gene"{match($9,/Name=([^;]+)/,arr); print $1,$4-1,$5,arr[1],".","."}' genomic.gff > geneFile_final.tsv
+- generate two files with code from step 5 of the github (from the file you just made)
+ - cut -f 4 geneFile_final.tsv > all_genes.list_final.filtered
+ - cut -f 4 geneFile_final.tsv > genes_with_terms_final.txt
+- download GO annotation file from genome website
+- For AEP and Hydractinia:
+ - wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/038/396/675/GCF_038396675.1_HydraT2T_AEP/GCF_038396675.1-RS_2024_06_gene_ontology.gaf.gz
+ - gunzip filename (will be red)
+- For 105
+ - Functional annotations tab (Blast2go file)
+ - wget blast2go_file_link
+- reformat GO file to two columns
+- make a file named GO_file_reformat.awk and paste the code below
+ - BEGIN{OFS="\t"} /^!/ || /^#/ || /^DB/ {next} $3 != "" && $5 != "" { key = $3 SUBSEP $5 if (!(key in seen)) { seen[key] = 1 if ($3 in go_terms) { go_terms[$3] = go_terms[$3] ";" $5 } else { go_terms[$3] = $5 gene_order[++n] = $3 } } } END { for (i = 1; i <= n; i++) { g = gene_order[i] print g, go_terms[g] } }
+- submit the script (change gofilename.gaf to your file name)
+ - awk -f GO_file_reformat.awk gofilename.gaf > gene2GO_final.tsv
+- should have a file named  gene2GO_final.tsv with two columns
+- run this script to make a file with lengths of scaffolds (change genome fasta to name of your genome file (hydra_AEP.fna)
+ - bioawk -c fastx '{print $name"\t"length($seq)}' genome.fasta | awk '$2>50000' > scaffolds.bed
+- make a job script and submit code
+- job submission info + modules needed + job script
+ - module load miniconda/3.13
+conda activate environment_name
+module load repeatmodeler
+sh TE-compartmentalization_pipeline.sh hydra_AEP genome.fasta RepeatPeps.lib go-basic.obo 90
+
+#failed, am adding util folder up a directory to see if it can find it. Got the error "python: can't open file '../util/FilterTEsFromTranscripts.py': [Errno 2] No such file or directory"
