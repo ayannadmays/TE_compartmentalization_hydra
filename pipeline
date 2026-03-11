@@ -66,3 +66,6 @@ sh TE-compartmentalization_pipeline.sh hydra_AEP genome.fasta RepeatPeps.lib go-
 
 #failed, am adding util folder up a directory to see if it can find it. Got the error "python: can't open file '../util/FilterTEsFromTranscripts.py': [Errno 2] No such file or directory"
 #found utils, but got error that it couldn't find fastaqual_select.pl, realized i forgot to download it from dependencies
+ - wget https://raw.githubusercontent.com/sujaikumar/assemblage/refs/heads/master/fastaqual_select.pl
+#added repeatmasker in submission job script
+ - module load repeatmasker/4.1.5
