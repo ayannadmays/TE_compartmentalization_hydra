@@ -71,3 +71,8 @@ sh TE-compartmentalization_pipeline.sh hydra_AEP genome.fasta RepeatPeps.lib go-
  - wget https://raw.githubusercontent.com/sujaikumar/assemblage/refs/heads/master/fastaqual_select.pl
 #said permission denied to fastaqual file so I did this line, then script turned green which means its executable
  - chmod +x \home/aymays/hydra_AEP_compartment/ncbi_dataset/data/GCF_038396675.1/TE-compartmentalization/fastaqual_select.pl
+#maybe loading repeatmasker before activating my conda environment meant that my conda environment wiped it cleean. Gonna activat conda environment, then load masker and modeler modules
+ - module load miniconda/3.13
+   conda activate 3.7DeepTE_env
+   module load repeatmodeler
+   module load repeatmasker/4.1.5
