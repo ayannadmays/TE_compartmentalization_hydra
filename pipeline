@@ -77,3 +77,4 @@ sh TE-compartmentalization_pipeline.sh hydra_AEP genome.fasta RepeatPeps.lib go-
    module load repeatmodeler
    module load repeatmasker/4.1.5
 #i had a typo in my miniconda module load! Should be miniconda3/3.13. Am running that with the custom library (included a -families.fa file), and also running one without to see if medusozoa rep library gives different (better?) results
+#failed still, running conda init bash, closed out terminal, then opened again and running the script
